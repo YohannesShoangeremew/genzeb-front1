@@ -1,11 +1,11 @@
 {
   "app": {
-    "name": "Edl Bingo",
+    "name": "Genzeb Bingo",
     "tagline": "Play. Win. Shine."
   },
   "maintenance": {
     "title": "We'll be right back",
-    "body": "Edl Bingo is under quick maintenance. Please check back in a little while."
+    "body": "Genzeb Bingo is under quick maintenance. Please check back in a little while."
   },
   "common": {
     "play": "Play",
@@ -27,10 +27,10 @@
   "auth": {
     "connecting": "Connecting to Telegram…",
     "notRegisteredTitle": "Almost there!",
-    "notRegisteredBody": "Open the Edl Bingo bot and tap Start to create your account, then come back here.",
+    "notRegisteredBody": "Open the Genzeb Bingo bot and tap Start to create your account, then come back here.",
     "openBot": "Open the Bot",
     "noTelegramTitle": "Open inside Telegram",
-    "noTelegramBody": "This app runs inside the Telegram Mini App. Open it from the Edl Bingo bot.",
+    "noTelegramBody": "This app runs inside the Telegram Mini App. Open it from the Genzeb Bingo bot.",
     "errorTitle": "Something went wrong",
     "errorBody": "We couldn't sign you in. Please try again."
   },
