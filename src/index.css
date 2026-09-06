@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  /* Global type/size scale. Everything sized in rem (text + spacing) shrinks
+     proportionally from the 16px browser default, for a more compact,
+     less-oversized UI. Tune this one value to taste. */
+  font-size: 14px;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(1200px 600px at 50% -10%, #16305a 0%, #0a1526 60%) fixed,
+    #0a1526;
+  color: #f5f5ff;
+  font-family: Inter, system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+  /* Respect Telegram safe areas where available. */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+    env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Hide scrollbars but keep scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@layer components {
+  .glass {
+    @apply bg-bg-card/70 backdrop-blur-md border border-white/5;
+  }
+  .neon-text {
+    text-shadow: 0 0 12px rgba(168, 85, 247, 0.7);
+  }
+}
