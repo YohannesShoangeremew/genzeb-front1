@@ -1,9 +1,9 @@
 {
-  "name": "edl-bingo-admin",
+  "name": "genzeb-bingo-admin",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Edl Bingo — Admin Dashboard",
+  "description": "Genzeb Bingo — Admin Dashboard",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
