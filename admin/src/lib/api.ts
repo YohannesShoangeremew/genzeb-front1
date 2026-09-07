@@ -1,7 +1,7 @@
 // Typed client for the Go backend admin API. All admin routes require a JWT
 // from an admin login (POST /auth/login with telegram_id + password).
 
-const BASE = (import.meta.env.VITE_API_BASE ?? "https://genzeb-front1.vercel.app/").replace(/\/$/, "");
+const BASE = (import.meta.env.VITE_API_BASE ?? "https://genzeb-back1.onrender.com").replace(/\/$/, "");
 const API = `${BASE};
 
 /**
