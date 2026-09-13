@@ -1,190 +1,216 @@
-const API_BASE = (import.meta.env.VITE_API_BASE ?? "http://localhost:8000").replace(/\/$/, "");
+export class ApiError extends Error {
+  status: number;
 
-let adminToken: string | null = localStorage.getItem("admin_token");
-
-export function getToken(): string | null {
-  return adminToken ?? localStorage.getItem("admin_token");
-}
-
-export function setAdminToken(token: string | null) {
-  adminToken = token;
-  if (token) {
-    localStorage.setItem("admin_token", token);
-  } else {
-    localStorage.removeItem("admin_token");
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
   }
 }
 
-export const setToken = setAdminToken;
-export const setAuthToken = setAdminToken;
-
-// --- Interfaces & Types ---
+export type VerificationOutcome = "verified" | "rejected" | "unavailable";
 
 export interface User {
   id: string;
   telegram_id: number | string;
-  username?: string;
-  first_name?: string;
-  last_name?: string;
-  role: string;
-  is_banned?: boolean;
-  balance?: number;
-  created_at?: string;
-  updated_at?: string;
-  [key: string]: any;
+  first_name: string;
+  last_name: string;
+  phone_number: string;
+  referal_code?: string;
+  role: "admin" | "user";
+  banned: boolean;
+  created_at: string;
+  wallet?: {
+    balance: number;
+    demo_balance: number;
+  };
 }
 
-export type VerificationOutcome = "approved" | "rejected" | "pending" | "success" | "failed" | string;
-
-export interface VerificationLog {
-  id: string;
-  user_id?: string;
-  action?: string;
-  outcome?: VerificationOutcome;
-  details?: string;
-  created_at?: string;
-  [key: string]: any;
+export interface UserGameStats {
+  games_played: number;
+  games_won: number;
+  total_deposited: number;
+  total_bonus: number;
+  total_won: number;
+  total_staked: number;
+  total_withdrawn: number;
+  real_balance: number;
+  bonus_balance: number;
+  referred_count: number;
 }
 
 export interface Transaction {
   id: string;
-  user_id?: string;
-  amount: number;
+  user_id: string;
+  player_name?: string;
+  player_phone?: string;
   type: string;
+  category?: string;
+  amount: number;
   status: string;
+  transaction_type?: string;
+  transaction_id?: string;
+  reference?: string;
+  created_at: string;
+}
+
+export interface VerificationLog {
+  id: string;
+  created_at: string;
+  user_id?: string;
+  player_name?: string;
+  player_phone?: string;
+  method: string;
+  reference: string;
+  outcome: VerificationOutcome;
+  amount?: number;
   reason?: string;
-  created_at?: string;
-  [key: string]: any;
+  raw_response: string;
 }
 
-export interface UsersResponse {
-  users: User[];
-  total?: number;
-  count?: number;
-  page?: number;
+export interface UserGameRecord {
+  total_stake: number;
+  is_winner: boolean;
+  win_amount: number;
+  joined_at: string;
+  game: {
+    id: string;
+    game_type: string;
+  };
 }
 
-export interface UserTransactionsResponse {
-  transactions: Transaction[];
-  total: number;
-}
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api/admin";
 
-export interface VerificationLogsResponse {
-  logs: VerificationLog[];
-  total: number;
-}
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const token = localStorage.getItem("admin_token");
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(options.headers as Record<string, string>),
+  };
 
-export class ApiError extends Error {
-  status: number;
-  reason?: string;
-  constructor(status: number, message: string, reason?: string) {
-    super(message);
-    this.status = status;
-    this.reason = reason;
-    this.name = "ApiError";
-  }
-}
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers,
+  });
 
-async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
-  const headers: Record<string, string> = { Accept: "application/json" };
-  if (body !== undefined) headers["Content-Type"] = "application/json";
-  if (adminToken) headers["Authorization"] = "Bearer " + adminToken;
+  const isJson = response.headers.get("content-type")?.includes("application/json");
+  const data = isJson ? await response.json() : null;
 
-  let res: Response;
-  try {
-    res = await fetch(API_BASE + path, {
-      method,
-      headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
-  } catch {
-    throw new ApiError(0, "network_error");
+  if (!response.ok) {
+    const message = data?.message || data?.error || `HTTP error ${response.status}`;
+    throw new ApiError(message, response.status);
   }
 
-  const text = await res.text();
-  const data = text ? safeJson(text) : null;
-
-  if (!res.ok) {
-    const msg = (data && (data.error || data.message)) || ("HTTP " + res.status);
-    throw new ApiError(res.status, msg, data?.reason);
-  }
   return data as T;
 }
 
-function safeJson(text: string): any {
-  try {
-    return JSON.parse(text);
-  } catch {
-    return null;
-  }
+function buildQuery(params: Record<string, string | number | boolean | undefined>): string {
+  const searchParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      searchParams.append(key, String(value));
+    }
+  });
+  const q = searchParams.toString();
+  return q ? `?${q}` : "";
 }
 
 export const api = {
-  base: API_BASE,
+  // Users & Accounts
+  users: (params: { limit: number; offset: number; search?: string }) =>
+    request<{ users: User[]; count: number }>(`/users${buildQuery(params)}`),
 
-  // Auth
-  login: (telegram_id: number | string, password: string) =>
-    request<{ token: string; user?: User }>("POST", "/api/v1/auth/login", {
-      telegram_id: typeof telegram_id === "string" ? parseInt(telegram_id, 10) || telegram_id : telegram_id,
-      password,
+  userDetail: (id: string) =>
+    request<{ user: User }>(`/users/${id}`),
+
+  userGameStats: (id: string) =>
+    request<{ stats: UserGameStats }>(`/users/${id}/game-stats`),
+
+  adjustBalance: (id: string, amount: number, reason?: string) =>
+    request<void>(`/users/${id}/balance`, {
+      method: "POST",
+      body: JSON.stringify({ amount, reason }),
     }),
 
-  // Dashboard Stats
-  getStats: () =>
-    request<any>("GET", "/api/v1/admin/stats/dashboard"),
+  makeAdmin: (id: string, password: string) =>
+    request<void>(`/users/${id}/make-admin`, {
+      method: "POST",
+      body: JSON.stringify({ password }),
+    }),
 
-  // Transactions
-  getPendingDeposits: () =>
-    request<any>("GET", "/api/v1/admin/transactions/pending/deposits"),
-  approveDeposit: (id: string) =>
-    request<any>("POST", "/api/v1/admin/transactions/" + encodeURIComponent(id) + "/approve-deposit"),
-  rejectDeposit: (id: string) =>
-    request<any>("POST", "/api/v1/admin/transactions/" + encodeURIComponent(id) + "/reject-deposit"),
+  setRole: (id: string, role: "admin" | "user") =>
+    request<void>(`/users/${id}/role`, {
+      method: "PATCH",
+      body: JSON.stringify({ role }),
+    }),
 
-  getPendingWithdrawals: () =>
-    request<any>("GET", "/api/v1/admin/transactions/pending/withdrawals"),
-  approveWithdrawal: (id: string) =>
-    request<any>("POST", "/api/v1/admin/transactions/" + encodeURIComponent(id) + "/approve-withdrawal"),
-  rejectWithdrawal: (id: string) =>
-    request<any>("POST", "/api/v1/admin/transactions/" + encodeURIComponent(id) + "/reject-withdrawal"),
+  banUser: (id: string) =>
+    request<void>(`/users/${id}/ban`, { method: "POST" }),
 
-  // Users
-  getUsers: (page = 1, search = ""): Promise<UsersResponse> => {
-    const q = new URLSearchParams({ page: String(page), search });
-    return request<UsersResponse>("GET", "/api/v1/admin/users?" + q.toString());
-  },
-  users: (page = 1, search = ""): Promise<UsersResponse> => {
-    const q = new URLSearchParams({ page: String(page), search });
-    return request<UsersResponse>("GET", "/api/v1/admin/users?" + q.toString());
-  },
-  getUser: (id: string): Promise<User> =>
-    request<User>("GET", "/api/v1/admin/users/" + encodeURIComponent(id)),
-  getUserTransactions: (id: string, page = 1): Promise<UserTransactionsResponse> => {
-    const q = new URLSearchParams({ page: String(page) });
-    return request<UserTransactionsResponse>("GET", "/api/v1/admin/users/" + encodeURIComponent(id) + "/transactions?" + q.toString());
-  },
-  updateUserRole: (id: string, role: string) =>
-    request<any>("PUT", "/api/v1/admin/users/" + encodeURIComponent(id) + "/role", { role }),
-  toggleUserBan: (id: string, banned: boolean) =>
-    request<any>("PUT", "/api/v1/admin/users/" + encodeURIComponent(id) + "/ban", { banned }),
-  adjustUserBalance: (id: string, amount: number, type: "credit" | "debit", reason: string) =>
-    request<any>("POST", "/api/v1/admin/users/" + encodeURIComponent(id) + "/balance", { amount, type, reason }),
+  unbanUser: (id: string) =>
+    request<void>(`/users/${id}/unban`, { method: "POST" }),
+
+  deleteUser: (id: string) =>
+    request<void>(`/users/${id}`, { method: "DELETE" }),
+
+  userReferrals: (id: string) =>
+    request<{ users: User[] }>(`/users/${id}/referrals`),
+
+  userGames: (id: string, limit: number, offset: number) =>
+    request<{ games: UserGameRecord[]; total: number }>(`/users/${id}/games${buildQuery({ limit, offset })}`),
+
+  userTransactions: (id: string, limit: number, offset: number) =>
+    request<{ transactions: Transaction[]; total: number }>(`/users/${id}/transactions${buildQuery({ limit, offset })}`),
 
   // Verification Logs
-  getVerificationLogs: (page = 1, search = ""): Promise<VerificationLogsResponse> => {
-    const q = new URLSearchParams({ page: String(page), search });
-    return request<VerificationLogsResponse>("GET", "/api/v1/admin/verification-logs?" + q.toString());
-  },
-  verificationLogs: (page = 1, search = ""): Promise<VerificationLogsResponse> => {
-    const q = new URLSearchParams({ page: String(page), search });
-    return request<VerificationLogsResponse>("GET", "/api/v1/admin/verification-logs?" + q.toString());
-  },
+  verificationLogs: (params: { reference?: string; limit: number; offset: number }) =>
+    request<{ logs: VerificationLog[]; total: number }>(`/verification-logs${buildQuery(params)}`),
 
-  // Games
-  getGames: () =>
-    request<any>("GET", "/api/v1/admin/games"),
-  games: () =>
-    request<any>("GET", "/api/v1/admin/games"),
-  cancelGame: (id: string) =>
-    request<any>("POST", "/api/v1/admin/games/" + encodeURIComponent(id) + "/cancel"),
+  // Transactions Ledger
+  pendingDeposits: (limit: number, offset: number, search?: string) =>
+    request<{ transactions: Transaction[]; total?: number }>(`/transactions/pending-deposits${buildQuery({ limit, offset, search })}`),
+
+  pendingWithdrawals: (limit: number, offset: number, search?: string) =>
+    request<{ transactions: Transaction[]; total?: number }>(`/transactions/pending-withdrawals${buildQuery({ limit, offset, search })}`),
+
+  winners: (limit: number, offset: number, search?: string) =>
+    request<{ transactions: Transaction[]; total?: number }>(`/transactions/winners${buildQuery({ limit, offset, search })}`),
+
+  transactions: (limit: number, offset: number, search?: string) =>
+    request<{ transactions: Transaction[]; total?: number }>(`/transactions${buildQuery({ limit, offset, search })}`),
+
+  completedDeposits: (limit: number, offset: number, search?: string) =>
+    request<{ transactions: Transaction[]; total?: number }>(`/transactions/completed-deposits${buildQuery({ limit, offset, search })}`),
+
+  completedWithdrawals: (limit: number, offset: number, search?: string) =>
+    request<{ transactions: Transaction[]; total?: number }>(`/transactions/completed-withdrawals${buildQuery({ limit, offset, search })}`),
+
+  transfers: (limit: number, offset: number, search?: string) =>
+    request<{ transactions: Transaction[]; total?: number }>(`/transactions/transfers${buildQuery({ limit, offset, search })}`),
+
+  failed: (limit: number, offset: number, search?: string) =>
+    request<{ transactions: Transaction[]; total?: number }>(`/transactions/failed${buildQuery({ limit, offset, search })}`),
+
+  // Deposit Actions
+  approveDeposit: (id: string, force = false) =>
+    request<void>(`/transactions/${id}/approve-deposit`, {
+      method: "POST",
+      body: JSON.stringify({ force }),
+    }),
+
+  rejectDeposit: (id: string) =>
+    request<void>(`/transactions/${id}/reject-deposit`, { method: "POST" }),
+
+  // Withdrawal Actions
+  approveWithdrawal: (id: string) =>
+    request<void>(`/transactions/${id}/approve-withdrawal`, { method: "POST" }),
+
+  rejectWithdrawalToBonus: (id: string) =>
+    request<{ result: { real_refunded: number; bonus_granted: number } }>(`/transactions/${id}/reject-withdrawal-bonus`, {
+      method: "POST",
+    }),
+
+  cancelTransaction: (id: string) =>
+    request<void>(`/transactions/${id}/cancel`, { method: "POST" }),
 };
