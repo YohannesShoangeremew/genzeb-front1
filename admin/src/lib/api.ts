@@ -18,6 +18,62 @@ export function setAdminToken(token: string | null) {
 export const setToken = setAdminToken;
 export const setAuthToken = setAdminToken;
 
+// --- Interfaces & Types ---
+
+export interface User {
+  id: string;
+  telegram_id: number | string;
+  username?: string;
+  first_name?: string;
+  last_name?: string;
+  role: string;
+  is_banned?: boolean;
+  balance?: number;
+  created_at?: string;
+  updated_at?: string;
+  [key: string]: any;
+}
+
+export type VerificationOutcome = "approved" | "rejected" | "pending" | "success" | "failed" | string;
+
+export interface VerificationLog {
+  id: string;
+  user_id?: string;
+  action?: string;
+  outcome?: VerificationOutcome;
+  details?: string;
+  created_at?: string;
+  [key: string]: any;
+}
+
+export interface Transaction {
+  id: string;
+  user_id?: string;
+  amount: number;
+  type: string;
+  status: string;
+  reason?: string;
+  created_at?: string;
+  [key: string]: any;
+}
+
+export interface UsersResponse {
+  users: User[];
+  total?: number;
+  count?: number;
+  page?: number;
+}
+
+export interface UserTransactionsResponse {
+  transactions: Transaction[];
+  total: number;
+}
+
+export interface VerificationLogsResponse {
+  logs: VerificationLog[];
+  total: number;
+}
+
 export class ApiError extends Error {
   status: number;
   reason?: string;
@@ -67,8 +123,11 @@ export const api = {
   base: API_BASE,
 
   // Auth
-  login: (telegram_id: number, password: string) =>
-    request<{ token: string }>("POST", "/api/v1/auth/login", { telegram_id, password }),
+  login: (telegram_id: number | string, password: string) =>
+    request<{ token: string; user?: User }>("POST", "/api/v1/auth/login", {
+      telegram_id: typeof telegram_id === "string" ? parseInt(telegram_id, 10) || telegram_id : telegram_id,
+      password,
+    }),
 
   // Dashboard Stats
   getStats: () =>
@@ -90,12 +149,20 @@ export const api = {
     request<any>("POST", "/api/v1/admin/transactions/" + encodeURIComponent(id) + "/reject-withdrawal"),
 
   // Users
-  getUsers: (page = 1, search = "") => {
+  getUsers: (page = 1, search = ""): Promise<UsersResponse> => {
     const q = new URLSearchParams({ page: String(page), search });
-    return request<any>("GET", "/api/v1/admin/users?" + q.toString());
+    return request<UsersResponse>("GET", "/api/v1/admin/users?" + q.toString());
   },
-  getUser: (id: string) =>
-    request<any>("GET", "/api/v1/admin/users/" + encodeURIComponent(id)),
+  users: (page = 1, search = ""): Promise<UsersResponse> => {
+    const q = new URLSearchParams({ page: String(page), search });
+    return request<UsersResponse>("GET", "/api/v1/admin/users?" + q.toString());
+  },
+  getUser: (id: string): Promise<User> =>
+    request<User>("GET", "/api/v1/admin/users/" + encodeURIComponent(id)),
+  getUserTransactions: (id: string, page = 1): Promise<UserTransactionsResponse> => {
+    const q = new URLSearchParams({ page: String(page) });
+    return request<UserTransactionsResponse>("GET", "/api/v1/admin/users/" + encodeURIComponent(id) + "/transactions?" + q.toString());
+  },
   updateUserRole: (id: string, role: string) =>
     request<any>("PUT", "/api/v1/admin/users/" + encodeURIComponent(id) + "/role", { role }),
   toggleUserBan: (id: string, banned: boolean) =>
@@ -103,8 +170,20 @@ export const api = {
   adjustUserBalance: (id: string, amount: number, type: "credit" | "debit", reason: string) =>
     request<any>("POST", "/api/v1/admin/users/" + encodeURIComponent(id) + "/balance", { amount, type, reason }),
 
+  // Verification Logs
+  getVerificationLogs: (page = 1, search = ""): Promise<VerificationLogsResponse> => {
+    const q = new URLSearchParams({ page: String(page), search });
+    return request<VerificationLogsResponse>("GET", "/api/v1/admin/verification-logs?" + q.toString());
+  },
+  verificationLogs: (page = 1, search = ""): Promise<VerificationLogsResponse> => {
+    const q = new URLSearchParams({ page: String(page), search });
+    return request<VerificationLogsResponse>("GET", "/api/v1/admin/verification-logs?" + q.toString());
+  },
+
   // Games
   getGames: () =>
+    request<any>("GET", "/api/v1/admin/games"),
+  games: () =>
     request<any>("GET", "/api/v1/admin/games"),
   cancelGame: (id: string) =>
     request<any>("POST", "/api/v1/admin/games/" + encodeURIComponent(id) + "/cancel"),
