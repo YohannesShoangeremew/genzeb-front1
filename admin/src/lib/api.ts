@@ -80,9 +80,22 @@ export interface UserGameRecord {
 }
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api/admin";
+const TOKEN_KEY = "admin_token";
+
+export function getToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function setToken(token: string | null): void {
+  if (token) {
+    localStorage.setItem(TOKEN_KEY, token);
+  } else {
+    localStorage.removeItem(TOKEN_KEY);
+  }
+}
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const token = localStorage.getItem("admin_token");
+  const token = getToken();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -117,6 +130,13 @@ function buildQuery(params: Record<string, string | number | boolean | undefined
 }
 
 export const api = {
+  // Auth
+  login: (phoneOrId: string | number, password: string) =>
+    request<{ token: string; user: User }>(`/auth/login`, {
+      method: "POST",
+      body: JSON.stringify({ telegram_id: phoneOrId, phone: phoneOrId, password }),
+    }),
+
   // Users & Accounts
   users: (params: { limit: number; offset: number; search?: string }) =>
     request<{ users: User[]; count: number }>(`/users${buildQuery(params)}`),
@@ -192,7 +212,7 @@ export const api = {
   failed: (limit: number, offset: number, search?: string) =>
     request<{ transactions: Transaction[]; total?: number }>(`/transactions/failed${buildQuery({ limit, offset, search })}`),
 
-  // Deposit Actions
+  // Actions
   approveDeposit: (id: string, force = false) =>
     request<void>(`/transactions/${id}/approve-deposit`, {
       method: "POST",
@@ -202,7 +222,6 @@ export const api = {
   rejectDeposit: (id: string) =>
     request<void>(`/transactions/${id}/reject-deposit`, { method: "POST" }),
 
-  // Withdrawal Actions
   approveWithdrawal: (id: string) =>
     request<void>(`/transactions/${id}/approve-withdrawal`, { method: "POST" }),
 
