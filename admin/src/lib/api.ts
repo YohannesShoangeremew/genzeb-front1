@@ -10,8 +10,13 @@ export interface VerificationLog {
   outcome: VerificationOutcome;
   amount?: number;
   reason?: string;
-  raw_response: string;
+  raw_response?: string;
   created_at: string;
+}
+
+export interface Wallet {
+  balance: number;
+  demo_balance: number;
 }
 
 export interface User {
@@ -23,10 +28,7 @@ export interface User {
   role: "admin" | "user";
   banned: boolean;
   referal_code?: string;
-  wallet?: {
-    balance: number;
-    demo_balance: number;
-  };
+  wallet?: Wallet;
   created_at: string;
 }
 
@@ -46,7 +48,15 @@ export interface UserGameStats {
 export interface Transaction {
   id: string;
   user_id: string;
-  type: "deposit" | "withdrawal" | "transfer_in" | "transfer_out" | "win" | "bet" | "bonus" | "referral";
+  type:
+    | "deposit"
+    | "withdrawal"
+    | "transfer_in"
+    | "transfer_out"
+    | "win"
+    | "bet"
+    | "bonus"
+    | "referral";
   category?: string;
   amount: number;
   status: "completed" | "pending" | "failed" | "cancelled";
@@ -110,9 +120,17 @@ export const api = {
       body: JSON.stringify({ telegram_id: phoneOrId, phone: phoneOrId, password }),
     }),
 
-  // Overview / Dashboard
-  getStats: () => request<any>("/stats"),
-  getPendingDeposits: () => request<any>("/deposits/pending"),
+  // Stats / Dashboard
+  getStats: () =>
+    request<{
+      total_users: number;
+      active_games: number;
+      total_volume: number;
+      pending_withdrawals: number;
+    }>("/stats"),
+
+  getPendingDeposits: () =>
+    request<{ deposits: Transaction[] }>("/deposits/pending"),
 
   // Users
   users: (params: { limit: number; offset: number; search?: string }) =>
@@ -139,35 +157,35 @@ export const api = {
 
   // User Actions
   adjustBalance: (id: string, amount: number, reason?: string) =>
-    request(`/users/${id}/adjust-balance`, {
+    request<{ success: boolean; balance: number }>(`/users/${id}/adjust-balance`, {
       method: "POST",
       body: JSON.stringify({ amount, reason }),
     }),
 
   makeAdmin: (id: string, password: string) =>
-    request(`/users/${id}/make-admin`, {
+    request<{ success: boolean }>(`/users/${id}/make-admin`, {
       method: "POST",
       body: JSON.stringify({ password }),
     }),
 
   setRole: (id: string, role: "admin" | "user") =>
-    request(`/users/${id}/role`, {
+    request<{ success: boolean }>(`/users/${id}/role`, {
       method: "PUT",
       body: JSON.stringify({ role }),
     }),
 
   banUser: (id: string) =>
-    request(`/users/${id}/ban`, { method: "POST" }),
+    request<{ success: boolean }>(`/users/${id}/ban`, { method: "POST" }),
 
   unbanUser: (id: string) =>
-    request(`/users/${id}/unban`, { method: "POST" }),
+    request<{ success: boolean }>(`/users/${id}/unban`, { method: "POST" }),
 
   deleteUser: (id: string) =>
-    request(`/users/${id}`, { method: "DELETE" }),
+    request<{ success: boolean }>(`/users/${id}`, { method: "DELETE" }),
 
   // Games
   cancelGame: (id: string) =>
-    request(`/games/${id}/cancel`, { method: "POST" }),
+    request<{ success: boolean }>(`/games/${id}/cancel`, { method: "POST" }),
 
   // Verification Logs
   verificationLogs: (params: { reference?: string; limit: number; offset: number }) =>
