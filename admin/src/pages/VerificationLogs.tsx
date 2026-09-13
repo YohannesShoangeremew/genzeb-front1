@@ -27,8 +27,6 @@ import { birr, date, initials, shortId } from "@/lib/format";
 
 const PAGE_SIZE = 50;
 
-// Tone for each verdict: verified = good, rejected = hard fail, unavailable =
-// couldn't be judged (went to manual review).
 function outcomeTone(o: VerificationOutcome): "green" | "red" | "yellow" {
   return o === "verified" ? "green" : o === "rejected" ? "red" : "yellow";
 }
@@ -37,7 +35,6 @@ function outcomeLabel(o: VerificationOutcome): string {
   return o === "verified" ? "Verified" : o === "rejected" ? "Rejected" : "Unverified";
 }
 
-// Pretty-print the raw provider JSON; fall back to the raw string if it isn't JSON.
 function prettyRaw(raw: string): string {
   if (!raw) return "";
   try {
@@ -114,8 +111,7 @@ export function VerificationLogs() {
               </tr>
             </thead>
             <tbody>
-            
-{logs.map((l: VerificationLog) => {
+              {logs.map((l: VerificationLog) => {
                 const name = l.player_name ?? "";
                 return (
                   <tr key={l.id} className={trClass}>
