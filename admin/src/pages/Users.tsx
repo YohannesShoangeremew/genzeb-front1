@@ -87,39 +87,41 @@ export function Users() {
               </tr>
             </thead>
             <tbody>
-              {visible.map((u) => (
-                <tr
-                  key={u.id}
-                  onClick={() => navigate(`/users/${u.id}`)}
-                  className={`cursor-pointer ${trClass}`}
-                >
-                  <td className={tdClass}>
-                    <div className="flex items-center gap-3">
-                      <Avatar initials={initials(u.first_name, u.last_name)} />
-                      <span className="font-medium text-txt">
-                        {fullName(u.first_name, u.last_name) || "—"}
-                      </span>
-                    </div>
-                  </td>
-                  <td className={`${tdClass} tabular-nums text-txt-3`}>{u.telegram_id}</td>
-                  <td className={`${tdClass} tabular-nums text-txt-2`}>
-                    {u.phone_number || <span className="text-txt-4">—</span>}
-                  </td>
-                  <td className={`${tdClass} text-right font-semibold tabular-nums text-txt`}>
-                    {birr(u.wallet?.balance)}
-                  </td>
-                  <td className={tdClass}>
-                    <Badge tone={u.role === "admin" ? "gold" : "neutral"}>{u.role}</Badge>
-                  </td>
-                  <td className={tdClass}>
-                    <StatusBadge value={u.banned ? "Banned" : "Active"} tone={u.banned ? "red" : "green"} />
-                  </td>
-                  <td className={`${tdClass} text-txt-3`}>{date(u.created_at)}</td>
-                  <td className={`${tdClass} text-right`} onClick={(e) => e.stopPropagation()}>
-                    <IconButton icon="eye" title="View player" onClick={() => navigate(`/users/${u.id}`)} />
-                  </td>
-                </tr>
-              ))}
+              import type { User } from "@/lib/api";
+
+{visible.map((u: User) => (
+  <tr
+    key={u.id}
+    onClick={() => navigate(`/users/${u.id}`)}
+    className={`cursor-pointer ${trClass}`}
+  >
+    <td className={tdClass}>
+      <div className="flex items-center gap-3">
+        <Avatar initials={initials(u.first_name, u.last_name)} />
+        <span className="font-medium text-txt">
+          {fullName(u.first_name, u.last_name) || "—"}
+        </span>
+      </div>
+    </td>
+    <td className={`${tdClass} tabular-nums text-txt-3`}>{u.telegram_id}</td>
+    <td className={`${tdClass} tabular-nums text-txt-2`}>
+      {u.phone_number || <span className="text-txt-4">—</span>}
+    </td>
+    <td className={`${tdClass} text-right font-semibold tabular-nums text-txt`}>
+      {birr(u.wallet?.balance)}
+    </td>
+    <td className={tdClass}>
+      <Badge tone={u.role === "admin" ? "gold" : "neutral"}>{u.role}</Badge>
+    </td>
+    <td className={tdClass}>
+      <StatusBadge value={u.banned ? "Banned" : "Active"} tone={u.banned ? "red" : "green"} />
+    </td>
+    <td className={`${tdClass} text-txt-3`}>{date(u.created_at)}</td>
+    <td className={`${tdClass} text-right`} onClick={(e) => e.stopPropagation()}>
+      <IconButton icon="eye" title="View player" onClick={() => navigate(`/users/${u.id}`)} />
+    </td>
+  </tr>
+))}
             </tbody>
           </Table>
         )}

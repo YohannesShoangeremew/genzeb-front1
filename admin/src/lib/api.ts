@@ -212,7 +212,7 @@ export const api = {
   failed: (limit: number, offset: number, search?: string) =>
     request<{ transactions: Transaction[]; total?: number }>(`/transactions/failed${buildQuery({ limit, offset, search })}`),
 
-  // Actions
+  // Deposit Actions
   approveDeposit: (id: string, force = false) =>
     request<void>(`/transactions/${id}/approve-deposit`, {
       method: "POST",
@@ -222,6 +222,7 @@ export const api = {
   rejectDeposit: (id: string) =>
     request<void>(`/transactions/${id}/reject-deposit`, { method: "POST" }),
 
+  // Withdrawal Actions
   approveWithdrawal: (id: string) =>
     request<void>(`/transactions/${id}/approve-withdrawal`, { method: "POST" }),
 

@@ -114,7 +114,8 @@ export function VerificationLogs() {
               </tr>
             </thead>
             <tbody>
-              {logs.map((l) => {
+            
+{logs.map((l: VerificationLog) => {
                 const name = l.player_name ?? "";
                 return (
                   <tr key={l.id} className={trClass}>

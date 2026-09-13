@@ -478,27 +478,29 @@ function TransactionHistory({ userId }: { userId: string }) {
               </tr>
             </thead>
             <tbody>
-              {rows.map((t) => {
-                const isIn = t.type === "deposit" || t.type === "transfer_in";
-                return (
-                  <tr key={t.id} className={trClass}>
-                    <td className={tdClass}>
-                      <StatusBadge value={t.category ?? t.type} tone={statusTone(t.category ?? t.type)} />
-                    </td>
-                    <td className={`${tdClass} text-right font-semibold tabular-nums ${isIn ? "text-success" : "text-txt"}`}>
-                      {isIn ? "+" : "−"}
-                      {birr(t.amount)}
-                    </td>
-                    <td className={tdClass}>
-                      <StatusBadge value={t.status} tone={statusTone(t.status)} />
-                    </td>
-                    <td className={`${tdClass} font-mono text-xs text-txt-3`}>
-                      {t.transaction_id || t.reference || "—"}
-                    </td>
-                    <td className={`${tdClass} whitespace-nowrap text-txt-3`}>{date(t.created_at)}</td>
-                  </tr>
-                );
-              })}
+          
+
+{rows.map((t: Transaction) => {
+  const isIn = t.type === "deposit" || t.type === "transfer_in";
+  return (
+    <tr key={t.id} className={trClass}>
+      <td className={tdClass}>
+        <StatusBadge value={t.category ?? t.type} tone={statusTone(t.category ?? t.type)} />
+      </td>
+      <td className={`${tdClass} text-right font-semibold tabular-nums ${isIn ? "text-success" : "text-txt"}`}>
+        {isIn ? "+" : "−"}
+        {birr(t.amount)}
+      </td>
+      <td className={tdClass}>
+        <StatusBadge value={t.status} tone={statusTone(t.status)} />
+      </td>
+      <td className={`${tdClass} font-mono text-xs text-txt-3`}>
+        {t.transaction_id || t.reference || "—"}
+      </td>
+      <td className={`${tdClass} whitespace-nowrap text-txt-3`}>{date(t.created_at)}</td>
+    </tr>
+  );
+})}
             </tbody>
           </Table>
           </div>
