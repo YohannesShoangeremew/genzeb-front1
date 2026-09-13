@@ -137,7 +137,7 @@ export const api = {
       body: JSON.stringify({ telegram_id: phoneOrId, phone: phoneOrId, password }),
     }),
 
-  // Users & Accounts
+  // Users
   users: (params: { limit: number; offset: number; search?: string }) =>
     request<{ users: User[]; count: number }>(`/users${buildQuery(params)}`),
 
@@ -146,6 +146,15 @@ export const api = {
 
   userGameStats: (id: string) =>
     request<{ stats: UserGameStats }>(`/users/${id}/game-stats`),
+
+  userReferrals: (id: string) =>
+    request<{ users: User[] }>(`/users/${id}/referrals`),
+
+  userGames: (id: string, limit: number, offset: number) =>
+    request<{ games: UserGameRecord[]; total: number }>(`/users/${id}/games${buildQuery({ limit, offset })}`),
+
+  userTransactions: (id: string, limit: number, offset: number) =>
+    request<{ transactions: Transaction[]; total: number }>(`/users/${id}/transactions${buildQuery({ limit, offset })}`),
 
   adjustBalance: (id: string, amount: number, reason?: string) =>
     request<void>(`/users/${id}/balance`, {
@@ -165,40 +174,23 @@ export const api = {
       body: JSON.stringify({ role }),
     }),
 
-  banUser: (id: string) =>
-    request<void>(`/users/${id}/ban`, { method: "POST" }),
-
-  unbanUser: (id: string) =>
-    request<void>(`/users/${id}/unban`, { method: "POST" }),
-
-  deleteUser: (id: string) =>
-    request<void>(`/users/${id}`, { method: "DELETE" }),
-
-  userReferrals: (id: string) =>
-    request<{ users: User[] }>(`/users/${id}/referrals`),
-
-  userGames: (id: string, limit: number, offset: number) =>
-    request<{ games: UserGameRecord[]; total: number }>(`/users/${id}/games${buildQuery({ limit, offset })}`),
-
-  userTransactions: (id: string, limit: number, offset: number) =>
-    request<{ transactions: Transaction[]; total: number }>(`/users/${id}/transactions${buildQuery({ limit, offset })}`),
+  banUser: (id: string) => request<void>(`/users/${id}/ban`, { method: "POST" }),
+  unbanUser: (id: string) => request<void>(`/users/${id}/unban`, { method: "POST" }),
+  deleteUser: (id: string) => request<void>(`/users/${id}`, { method: "DELETE" }),
 
   // Verification Logs
   verificationLogs: (params: { reference?: string; limit: number; offset: number }) =>
     request<{ logs: VerificationLog[]; total: number }>(`/verification-logs${buildQuery(params)}`),
 
-  // Transactions Ledger
+  // Ledger
+  transactions: (limit: number, offset: number, search?: string) =>
+    request<{ transactions: Transaction[]; total?: number }>(`/transactions${buildQuery({ limit, offset, search })}`),
+
   pendingDeposits: (limit: number, offset: number, search?: string) =>
     request<{ transactions: Transaction[]; total?: number }>(`/transactions/pending-deposits${buildQuery({ limit, offset, search })}`),
 
   pendingWithdrawals: (limit: number, offset: number, search?: string) =>
     request<{ transactions: Transaction[]; total?: number }>(`/transactions/pending-withdrawals${buildQuery({ limit, offset, search })}`),
-
-  winners: (limit: number, offset: number, search?: string) =>
-    request<{ transactions: Transaction[]; total?: number }>(`/transactions/winners${buildQuery({ limit, offset, search })}`),
-
-  transactions: (limit: number, offset: number, search?: string) =>
-    request<{ transactions: Transaction[]; total?: number }>(`/transactions${buildQuery({ limit, offset, search })}`),
 
   completedDeposits: (limit: number, offset: number, search?: string) =>
     request<{ transactions: Transaction[]; total?: number }>(`/transactions/completed-deposits${buildQuery({ limit, offset, search })}`),
@@ -206,31 +198,28 @@ export const api = {
   completedWithdrawals: (limit: number, offset: number, search?: string) =>
     request<{ transactions: Transaction[]; total?: number }>(`/transactions/completed-withdrawals${buildQuery({ limit, offset, search })}`),
 
+  winners: (limit: number, offset: number, search?: string) =>
+    request<{ transactions: Transaction[]; total?: number }>(`/transactions/winners${buildQuery({ limit, offset, search })}`),
+
   transfers: (limit: number, offset: number, search?: string) =>
     request<{ transactions: Transaction[]; total?: number }>(`/transactions/transfers${buildQuery({ limit, offset, search })}`),
 
   failed: (limit: number, offset: number, search?: string) =>
     request<{ transactions: Transaction[]; total?: number }>(`/transactions/failed${buildQuery({ limit, offset, search })}`),
 
-  // Deposit Actions
   approveDeposit: (id: string, force = false) =>
     request<void>(`/transactions/${id}/approve-deposit`, {
       method: "POST",
       body: JSON.stringify({ force }),
     }),
 
-  rejectDeposit: (id: string) =>
-    request<void>(`/transactions/${id}/reject-deposit`, { method: "POST" }),
-
-  // Withdrawal Actions
-  approveWithdrawal: (id: string) =>
-    request<void>(`/transactions/${id}/approve-withdrawal`, { method: "POST" }),
+  rejectDeposit: (id: string) => request<void>(`/transactions/${id}/reject-deposit`, { method: "POST" }),
+  approveWithdrawal: (id: string) => request<void>(`/transactions/${id}/approve-withdrawal`, { method: "POST" }),
 
   rejectWithdrawalToBonus: (id: string) =>
     request<{ result: { real_refunded: number; bonus_granted: number } }>(`/transactions/${id}/reject-withdrawal-bonus`, {
       method: "POST",
     }),
 
-  cancelTransaction: (id: string) =>
-    request<void>(`/transactions/${id}/cancel`, { method: "POST" }),
+  cancelTransaction: (id: string) => request<void>(`/transactions/${id}/cancel`, { method: "POST" }),
 };
