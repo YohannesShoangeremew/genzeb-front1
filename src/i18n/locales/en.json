@@ -145,7 +145,7 @@
     "viewCard": "View card",
     "playAgain": "Play again",
     "share": "Share",
-    "shareText": "I just won {{amount}} on Edl Bingo! 🎉 Come play with me:",
+    "shareText": "I just won {{amount}} on Genzeb Bingo! 🎉 Come play with me:",
     "viewWinnerCard": "View winner's card",
     "winnerCardTitle": "Winner's card",
     "winnerHeadline": "{{name}} wins!",
@@ -226,7 +226,7 @@
     "body": "Invite friends with your link. When someone you invite makes their first deposit, you earn a 15 birr play-only bonus. It buys cards but cannot be withdrawn.",
     "yourCode": "Your code",
     "shareBtn": "Share on Telegram",
-    "shareText": "🎯 Join me on EDL Bingo! Tap my link to start playing:"
+    "shareText": "🎯 Join me on Genzeb Bingo! Tap my link to start playing:"
   },
   "leaderboard": {
     "title": "Leaderboard",

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api, type User } from "@/lib/api";
+import { api } from "@/lib/api";
 import { usePolling } from "@/lib/usePolling";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
 import {
@@ -87,7 +87,7 @@ export function Users() {
               </tr>
             </thead>
             <tbody>
-              {visible.map((u: User) => (
+              {visible.map((u) => (
                 <tr
                   key={u.id}
                   onClick={() => navigate(`/users/${u.id}`)}
@@ -106,10 +106,10 @@ export function Users() {
                     {u.phone_number || <span className="text-txt-4">—</span>}
                   </td>
                   <td className={`${tdClass} text-right font-semibold tabular-nums text-txt`}>
-                    {birr(u.wallet?.balance ?? 0)}
+                    {birr(u.wallet?.balance)}
                   </td>
                   <td className={tdClass}>
-                    <Badge tone={u.role === "admin" ? "purple" : "neutral"}>{u.role}</Badge>
+                    <Badge tone={u.role === "admin" ? "gold" : "neutral"}>{u.role}</Badge>
                   </td>
                   <td className={tdClass}>
                     <StatusBadge value={u.banned ? "Banned" : "Active"} tone={u.banned ? "red" : "green"} />

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { api, type UserGameStats, type Transaction } from "@/lib/api";
+import { api, type UserGameStats } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
 import {
   Avatar,
@@ -121,7 +121,7 @@ export function UserDetail() {
         <ErrorNote message={error} onRetry={reload} />
       ) : u ? (
         <div className="grid gap-4 lg:grid-cols-3">
-          {/* left column */}
+          {/* -------------------------------------------------- left column -- */}
           <div className="space-y-4 lg:col-span-2">
             {/* Profile header */}
             <Card>
@@ -139,8 +139,8 @@ export function UserDetail() {
                   <dl className="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
                     <Row label="Phone" value={u.phone_number} />
                     <Row label="Telegram ID" value={String(u.telegram_id)} />
-                    <Row label="Referral code" value={u.referal_code || ""} />
-                    <Row label="Demo balance" value={birr(u.wallet?.demo_balance ?? 0)} />
+                    <Row label="Referral code" value={u.referal_code} />
+                    <Row label="Demo balance" value={birr(u.wallet?.demo_balance)} />
                     <Row label="Joined" value={date(u.created_at)} />
                   </dl>
                 </div>
@@ -272,13 +272,13 @@ export function UserDetail() {
             </Card>
           </div>
 
-          {/* right column */}
+          {/* ------------------------------------------------- right column -- */}
           <div className="space-y-4">
             <StatCard
               icon="wallet"
               tone="green"
               label="Withdrawable balance"
-              value={birr(u.wallet?.balance ?? 0)}
+              value={birr(u.wallet?.balance)}
             />
             <StatCard
               icon="coins"
@@ -289,7 +289,7 @@ export function UserDetail() {
             {stats && <PlayerMoneyCard stats={stats} />}
           </div>
 
-          {/* full-width data cards */}
+          {/* -------------------- full-width data cards — each scrolls inside -- */}
           <div className="grid gap-4 lg:col-span-3 lg:grid-cols-2">
             <TransactionHistory userId={id} />
             <GamesPlayed userId={id} />
@@ -303,6 +303,8 @@ export function UserDetail() {
   );
 }
 
+// InvitedPlayers lists everyone this player referred, each linking to their own
+// profile — so you can trace a referral chain.
 function InvitedPlayers({ userId }: { userId: string }) {
   const { data, loading } = useApi(() => api.userReferrals(userId), [userId]);
   const users = data?.users ?? [];
@@ -314,6 +316,8 @@ function InvitedPlayers({ userId }: { userId: string }) {
       ) : users.length === 0 ? (
         <p className="text-sm text-txt-4">Hasn't invited anyone.</p>
       ) : (
+        // Bounded height with internal scroll, so a big referral list scrolls
+        // inside the card instead of stretching the whole page down.
         <ul className="max-h-64 space-y-2 overflow-y-auto pr-1">
           {users.map((u) => (
             <li key={u.id}>
@@ -336,6 +340,7 @@ function InvitedPlayers({ userId }: { userId: string }) {
   );
 }
 
+// GamesPlayed is paginated by distinct game (not by card).
 function GamesPlayed({ userId }: { userId: string }) {
   const PAGE = 20;
   const [page, setPage] = useState(0);
@@ -396,6 +401,8 @@ function GamesPlayed({ userId }: { userId: string }) {
   );
 }
 
+// PlayerMoneyCard shows a player's play record + where their balance came from,
+// so an admin reviewing them can tell a real winner from a farmed/bonus account.
 function PlayerMoneyCard({ stats }: { stats: UserGameStats }) {
   return (
     <Card>
@@ -436,6 +443,8 @@ function PlayerMoneyCard({ stats }: { stats: UserGameStats }) {
   );
 }
 
+// TransactionHistory is the player's full ledger — deposits, withdrawals, bets,
+// winnings, bonuses and referral rewards — paginated.
 function TransactionHistory({ userId }: { userId: string }) {
   const PAGE = 20;
   const [page, setPage] = useState(0);
@@ -458,40 +467,40 @@ function TransactionHistory({ userId }: { userId: string }) {
       ) : (
         <>
           <div className="max-h-80 overflow-y-auto">
-            <Table>
-              <thead>
-                <tr>
-                  <th className={thClass}>Type</th>
-                  <th className={`${thClass} text-right`}>Amount</th>
-                  <th className={thClass}>Status</th>
-                  <th className={thClass}>Reference</th>
-                  <th className={thClass}>When</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((t: Transaction) => {
-                  const isIn = t.type === "deposit" || t.type === "transfer_in";
-                  return (
-                    <tr key={t.id} className={trClass}>
-                      <td className={tdClass}>
-                        <StatusBadge value={t.category ?? t.type} tone={statusTone(t.category ?? t.type)} />
-                      </td>
-                      <td className={`${tdClass} text-right font-semibold tabular-nums ${isIn ? "text-success" : "text-txt"}`}>
-                        {isIn ? "+" : "−"}
-                        {birr(t.amount)}
-                      </td>
-                      <td className={tdClass}>
-                        <StatusBadge value={t.status} tone={statusTone(t.status)} />
-                      </td>
-                      <td className={`${tdClass} font-mono text-xs text-txt-3`}>
-                        {t.transaction_id || t.reference || "—"}
-                      </td>
-                      <td className={`${tdClass} whitespace-nowrap text-txt-3`}>{date(t.created_at)}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </Table>
+          <Table>
+            <thead>
+              <tr>
+                <th className={thClass}>Type</th>
+                <th className={`${thClass} text-right`}>Amount</th>
+                <th className={thClass}>Status</th>
+                <th className={thClass}>Reference</th>
+                <th className={thClass}>When</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((t) => {
+                const isIn = t.type === "deposit" || t.type === "transfer_in";
+                return (
+                  <tr key={t.id} className={trClass}>
+                    <td className={tdClass}>
+                      <StatusBadge value={t.category ?? t.type} tone={statusTone(t.category ?? t.type)} />
+                    </td>
+                    <td className={`${tdClass} text-right font-semibold tabular-nums ${isIn ? "text-success" : "text-txt"}`}>
+                      {isIn ? "+" : "−"}
+                      {birr(t.amount)}
+                    </td>
+                    <td className={tdClass}>
+                      <StatusBadge value={t.status} tone={statusTone(t.status)} />
+                    </td>
+                    <td className={`${tdClass} font-mono text-xs text-txt-3`}>
+                      {t.transaction_id || t.reference || "—"}
+                    </td>
+                    <td className={`${tdClass} whitespace-nowrap text-txt-3`}>{date(t.created_at)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </Table>
           </div>
           <Pagination page={page} pageSize={PAGE} total={total} onPage={setPage} shown={rows.length} />
         </>
