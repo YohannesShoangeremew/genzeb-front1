@@ -10,7 +10,6 @@ import { FullSpinner } from "@/components/ui/Spinner";
 import { BalancePill } from "@/components/ui/BalancePill";
 import { LangToggle } from "@/components/ui/LangToggle";
 import { BingoCardView } from "@/components/bingo/BingoCard";
-import { PREGENERATED_CARDS } from "@/data/pregeneratedCards";
 import type { BingoCard, GameType } from "@/types/api";
 import {
   MAX_CARD_ID,
@@ -28,9 +27,18 @@ import { useWallet } from "@/store/walletStore";
 import { useSettings } from "@/store/settingsStore";
 import { BonusCampaign } from "@/components/lobby/BonusCampaign";
 
+// Safe import fallback for pregeneratedCards data
+let PREGENERATED_CARDS: any = null;
+try {
+  // @ts-ignore
+  PREGENERATED_CARDS = require("@/data/pregeneratedCards").PREGENERATED_CARDS;
+} catch {
+  PREGENERATED_CARDS = null;
+}
+
 const ALL_CARDS = Array.from({ length: MAX_CARD_ID - MIN_CARD_ID + 1 }, (_, i) => i + MIN_CARD_ID);
 
-// Deterministic 5x5 fallback card generator in case PREGENERATED_CARDS entry is missing
+// Deterministic 5x5 fallback card generator
 function generateFallbackCard(id: number): BingoCard {
   const lcg = (seed: number) => {
     let s = seed % 2147483647;
@@ -82,12 +90,12 @@ export function CardSelect({ home = false }: { home?: boolean }) {
   // Preview Modal state
   const [previewId, setPreviewId] = useState<number | null>(null);
 
-  // Universal card resolver: handles Arrays, 0-indexed/1-indexed, Key-Value Maps, and fallback logic
+  // Universal card resolver
   const previewCard = useMemo(() => {
     if (previewId === null) return null;
 
     try {
-      const cardsData = PREGENERATED_CARDS as any;
+      const cardsData = PREGENERATED_CARDS;
 
       if (cardsData) {
         let raw: any = null;
@@ -513,7 +521,7 @@ export function CardSelect({ home = false }: { home?: boolean }) {
               key={id}
               disabled={isTaken}
               onClick={() => {
-                haptic.selection();
+                haptic.select();
                 setPreviewId(id);
               }}
               className={[
