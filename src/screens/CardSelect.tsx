@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
@@ -530,66 +531,87 @@ export function CardSelect({ home = false }: { home?: boolean }) {
         })}
       </div>
 
-      {/* INSTANT CARD PREVIEW MODAL */}
-      {previewId !== null && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
-          onClick={() => setPreviewId(null)}
-        >
+     {/* INSTANT CARD PREVIEW MODAL (PORTAL TO BODY) */}
+      {previewId !== null &&
+        createPortal(
           <div
-            className="w-full max-w-xs rounded-2xl border border-white/15 bg-bg-card p-4 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md"
+            onClick={() => setPreviewId(null)}
           >
-            <div className="mb-3 flex items-center justify-between">
-              <span className="font-display text-lg font-bold text-white">
-                Card #{previewId}
-              </span>
-              <button
-                onClick={() => setPreviewId(null)}
-                className="rounded-full bg-white/10 px-2.5 py-1 text-xs text-ink-muted hover:text-white"
-              >
-                ✕
-              </button>
+            <div
+              className="w-full max-w-xs rounded-2xl border border-white/20 bg-bg-card p-4 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-3 flex items-center justify-between border-b border-white/10 pb-2">
+                <span className="font-display text-lg font-extrabold text-white">
+                  Bingo Card #{previewId}
+                </span>
+                <button
+                  onClick={() => setPreviewId(null)}
+                  className="rounded-full bg-white/10 px-2.5 py-1 text-xs text-ink-muted hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* CARD PREVIEW GRID */}
+              <div className="mb-4">
+                {previewCard?.numbers && Array.isArray(previewCard.numbers) ? (
+                  <div className="grid grid-cols-5 gap-1.5 rounded-xl border border-white/10 bg-black/40 p-2 text-center">
+                    {/* BINGO HEADER */}
+                    {["B", "I", "N", "G", "O"].map((letter) => (
+                      <div
+                        key={letter}
+                        className="py-1 text-xs font-black text-neon-cyan"
+                      >
+                        {letter}
+                      </div>
+                    ))}
+                    {/* 5x5 NUMBERS GRID */}
+                    {previewCard.numbers.flatMap((row: number[], rIdx: number) =>
+                      row.map((num: number, cIdx: number) => (
+                        <div
+                          key={`${rIdx}-${cIdx}`}
+                          className={`flex aspect-square items-center justify-center rounded-lg text-xs font-extrabold ${
+                            num === 0
+                              ? "bg-neon-cyan/20 text-neon-cyan ring-1 ring-neon-cyan/50"
+                              : "bg-white/5 text-white ring-1 ring-white/10"
+                          }`}
+                        >
+                          {num === 0 ? "FREE" : num}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                ) : (
+                  <BingoCardView card={previewCard!} daubed={new Set()} />
+                )}
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPreviewId(null)}
+                  className="flex-1 rounded-xl bg-white/10 py-2.5 text-xs font-bold text-white active:scale-95"
+                >
+                  Close
+                </button>
+
+                <button
+                  disabled={takenByOther(previewId, owned.has(previewId))}
+                  onClick={() => {
+                    toggle(previewId);
+                    setPreviewId(null);
+                  }}
+                  className={`flex-1 rounded-xl py-2.5 text-xs font-bold transition active:scale-95 ${
+                    owned.has(previewId)
+                      ? "bg-neon-red/20 text-neon-red ring-1 ring-neon-red/50"
+                      : "bg-neon-cyan text-bg font-extrabold"
+                  }`}
+                >
+                  {owned.has(previewId) ? "Remove Card" : "Select Card"}
+                </button>
+              </div>
             </div>
-
-            <div className="mb-4">
-              {previewCard ? (
-                <BingoCardView card={previewCard} daubed={new Set()} />
-              ) : (
-                <div className="rounded-xl border border-white/10 bg-black/40 p-4 text-center text-xs text-neon-red">
-                  Card data unavailable.
-                </div>
-              )}
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={() => setPreviewId(null)}
-                className="flex-1 rounded-xl bg-white/10 py-2 text-xs font-bold text-white"
-              >
-                Close
-              </button>
-
-              <button
-                disabled={takenByOther(previewId, owned.has(previewId))}
-                onClick={() => {
-                  toggle(previewId);
-                  setPreviewId(null);
-                }}
-                className={`flex-1 rounded-xl py-2 text-xs font-bold transition ${
-                  owned.has(previewId)
-                    ? "bg-neon-red/20 text-neon-red ring-1 ring-neon-red/50"
-                    : "bg-neon-cyan text-bg font-extrabold"
-                }`}
-              >
-                {owned.has(previewId) ? "Remove Card" : "Select Card"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div aria-hidden className={home ? "h-24" : "h-6"} />
-    </ScreenShell>
-  );
-}
+          </div>,
+          document.body
+        )}
