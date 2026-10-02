@@ -10,6 +10,7 @@ import { FullSpinner } from "@/components/ui/Spinner";
 import { BalancePill } from "@/components/ui/BalancePill";
 import { LangToggle } from "@/components/ui/LangToggle";
 import { BingoCardView } from "@/components/bingo/BingoCard";
+import { CardPreview } from "@/components/bingo/CardPreview";
 import type { BingoCard, GameType } from "@/types/api";
 import {
   MAX_CARD_ID,
@@ -27,18 +28,12 @@ import { useWallet } from "@/store/walletStore";
 import { useSettings } from "@/store/settingsStore";
 import { BonusCampaign } from "@/components/lobby/BonusCampaign";
 
-// Safe import fallback for pregeneratedCards data
-let PREGENERATED_CARDS: any = null;
-try {
-  // @ts-ignore
-  PREGENERATED_CARDS = require("@/data/pregeneratedCards").PREGENERATED_CARDS;
-} catch {
-  PREGENERATED_CARDS = null;
-}
+const ALL_CARDS = Array.from(
+  { length: MAX_CARD_ID - MIN_CARD_ID + 1 },
+  (_, i) => i + MIN_CARD_ID
+);
 
-const ALL_CARDS = Array.from({ length: MAX_CARD_ID - MIN_CARD_ID + 1 }, (_, i) => i + MIN_CARD_ID);
-
-// Deterministic 5x5 fallback card generator
+// Fallback deterministic 5x5 generator in case local lookup fails
 function generateFallbackCard(id: number): BingoCard {
   const lcg = (seed: number) => {
     let s = seed % 2147483647;
@@ -63,7 +58,7 @@ function generateFallbackCard(id: number): BingoCard {
   const b = getCol(1, 15, 5);
   const iCol = getCol(16, 30, 5);
   const n = getCol(31, 45, 5);
-  n[2] = 0; // FREE space in center
+  n[2] = 0; // FREE space
   const g = getCol(46, 60, 5);
   const o = getCol(61, 75, 5);
 
@@ -90,45 +85,8 @@ export function CardSelect({ home = false }: { home?: boolean }) {
   // Preview Modal state
   const [previewId, setPreviewId] = useState<number | null>(null);
 
-  // Universal card resolver
   const previewCard = useMemo(() => {
     if (previewId === null) return null;
-
-    try {
-      const cardsData = PREGENERATED_CARDS;
-
-      if (cardsData) {
-        let raw: any = null;
-
-        if (Array.isArray(cardsData)) {
-          raw = cardsData.find(
-            (c: any) => c?.id === previewId || c?.card_id === previewId || c?.cardId === previewId
-          );
-          if (!raw && cardsData[previewId - 1]) raw = cardsData[previewId - 1];
-          if (!raw && cardsData[previewId]) raw = cardsData[previewId];
-        } else if (typeof cardsData === "object") {
-          raw = cardsData[previewId] ?? cardsData[String(previewId)] ?? cardsData.cards?.[previewId];
-        }
-
-        if (raw) {
-          const cardObj = raw.card || raw;
-          const numbers = cardObj.numbers || cardObj.grid || cardObj.matrix || cardObj.numbers_json;
-          if (Array.isArray(numbers)) {
-            return {
-              ...cardObj,
-              id: cardObj.id ?? cardObj.card_id ?? previewId,
-              numbers: numbers,
-            } as BingoCard;
-          }
-          if (cardObj && typeof cardObj === "object") {
-            return cardObj as BingoCard;
-          }
-        }
-      }
-    } catch (e) {
-      console.error("Error loading pregenerated card:", e);
-    }
-
     return generateFallbackCard(previewId);
   }, [previewId]);
 
@@ -136,7 +94,9 @@ export function CardSelect({ home = false }: { home?: boolean }) {
     refreshWallet().catch(() => {});
   }, [refreshWallet]);
 
-  const [overlay, setOverlay] = useState<Map<number, "add" | "remove">>(new Map());
+  const [overlay, setOverlay] = useState<Map<number, "add" | "remove">>(
+    new Map()
+  );
 
   const gameQ = useQuery({
     queryKey: ["game-for-type", type],
@@ -233,11 +193,14 @@ export function CardSelect({ home = false }: { home?: boolean }) {
     serverEndsAt ??
     (liveGame?.countdown_ends ? Date.parse(liveGame.countdown_ends) : null);
   const secondsLeft =
-    countdownEnds != null ? Math.max(0, Math.ceil((countdownEnds - nowTs) / 1000)) : null;
+    countdownEnds != null
+      ? Math.max(0, Math.ceil((countdownEnds - nowTs) / 1000))
+      : null;
 
   const isCountdown =
     secondsLeft != null &&
-    (liveGame?.state === "COUNTDOWN" || (serverEndsAt != null && serverEndsAt > nowTs));
+    (liveGame?.state === "COUNTDOWN" ||
+      (serverEndsAt != null && serverEndsAt > nowTs));
 
   const roundCode =
     liveGame?.round_code ||
@@ -258,7 +221,7 @@ export function CardSelect({ home = false }: { home?: boolean }) {
 
   const serverOwned = useMemo(
     () => new Set((ownedQ.data?.cards ?? []).map((c) => c.card_id)),
-    [ownedQ.data],
+    [ownedQ.data]
   );
 
   const owned = useMemo(() => {
@@ -305,7 +268,8 @@ export function CardSelect({ home = false }: { home?: boolean }) {
     inFlight.current.clear();
   }, [gameId]);
 
-  const roundOver = liveGame?.state === "FINISHED" || liveGame?.state === "CANCELLED";
+  const roundOver =
+    liveGame?.state === "FINISHED" || liveGame?.state === "CANCELLED";
   const refetchWinnings = winningsQ.refetch;
 
   useEffect(() => {
@@ -364,7 +328,8 @@ export function CardSelect({ home = false }: { home?: boolean }) {
     try {
       for (;;) {
         const want = desired.current.get(id);
-        const actual = confirmed.current.get(id) ?? serverOwnedRef.current.has(id);
+        const actual =
+          confirmed.current.get(id) ?? serverOwnedRef.current.has(id);
         if (want === undefined || want === actual) break;
         if (want) {
           await api.join(gameId, id);
@@ -381,7 +346,10 @@ export function CardSelect({ home = false }: { home?: boolean }) {
         return n;
       });
       const msg = e instanceof ApiError ? e.message : "error";
-      push(msg === "insufficient balance" ? t("card.insufficient") : msg, "error");
+      push(
+        msg === "insufficient balance" ? t("card.insufficient") : msg,
+        "error"
+      );
       void Promise.all([ownedQ.refetch(), stateQ.refetch()]);
     } finally {
       inFlight.current.delete(id);
@@ -466,7 +434,9 @@ export function CardSelect({ home = false }: { home?: boolean }) {
           </span>
           {isCountdown ? (
             <span className="flex items-center gap-2">
-              <span className="text-[11px] text-ink-faint">{t("card.startingIn")}</span>
+              <span className="text-[11px] text-ink-faint">
+                {t("card.startingIn")}
+              </span>
               <span className="rounded-lg border border-neon-cyan/50 px-2.5 py-0.5 font-display text-lg font-extrabold tabular-nums text-neon-cyan shadow-glow-cyan">
                 {secondsLeft}
               </span>
@@ -490,28 +460,24 @@ export function CardSelect({ home = false }: { home?: boolean }) {
         {t("card.capHint", { count: ownedCount, max: MAX_CARDS_PER_PLAYER })}
       </p>
 
+      {/* SELECTED CARDS PREVIEW STRIP */}
       {ownedCount > 0 && (
         <div className="sticky top-0 z-10 -mx-4 mb-2 border-b border-white/5 bg-bg/95 px-4 py-2 backdrop-blur">
-          <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-neon-cyan">
-            {t("card.yourSelection")} · {t("card.selectedCount", { count: ownedCount })}
+          <div className="mb-2 text-[11px] font-bold uppercase tracking-wide text-neon-cyan">
+            {t("card.yourSelection")} ·{" "}
+            {t("card.selectedCount", { count: ownedCount })}
           </div>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
             {[...owned]
               .sort((a, b) => a - b)
               .map((id) => (
-                <button
-                  key={id}
-                  onClick={() => toggle(id)}
-                  className="flex items-center gap-1 rounded-full bg-neon-cyan/15 px-2.5 py-1 text-xs font-bold text-white ring-1 ring-neon-cyan/50 transition active:scale-90"
-                >
-                  #{id}
-                  <span className="text-[10px] opacity-60">✕</span>
-                </button>
+                <CardPreview key={id} id={id} onRemove={() => toggle(id)} />
               ))}
           </div>
         </div>
       )}
 
+      {/* ALL CARDS SELECTION GRID */}
       <div className="grid grid-cols-7 gap-1 pb-3 sm:grid-cols-9">
         {ALL_CARDS.map((id) => {
           const isMine = owned.has(id);
@@ -529,8 +495,8 @@ export function CardSelect({ home = false }: { home?: boolean }) {
                 isMine
                   ? "scale-105 bg-neon-cyan/15 text-white ring-2 ring-neon-cyan shadow-glow-cyan"
                   : isTaken
-                    ? "cursor-not-allowed bg-black/60 text-ink-faint/25 line-through ring-1 ring-white/5"
-                    : "bg-bg-card text-ink ring-1 ring-white/10 hover:ring-neon-cyan/60",
+                  ? "cursor-not-allowed bg-black/60 text-ink-faint/25 line-through ring-1 ring-white/5"
+                  : "bg-bg-card text-ink ring-1 ring-white/10 hover:ring-neon-cyan/60",
               ].join(" ")}
             >
               {id}
@@ -541,7 +507,7 @@ export function CardSelect({ home = false }: { home?: boolean }) {
 
       <div aria-hidden className={home ? "h-24" : "h-6"} />
 
-      {/* INSTANT CARD PREVIEW MODAL (PORTAL TO BODY) */}
+      {/* CARD PREVIEW MODAL */}
       {previewId !== null &&
         createPortal(
           <div
@@ -564,7 +530,6 @@ export function CardSelect({ home = false }: { home?: boolean }) {
                 </button>
               </div>
 
-              {/* CARD PREVIEW GRID */}
               <div className="mb-4">
                 {previewCard?.numbers && Array.isArray(previewCard.numbers) ? (
                   <div className="grid grid-cols-5 gap-1.5 rounded-xl border border-white/10 bg-black/40 p-2 text-center">
