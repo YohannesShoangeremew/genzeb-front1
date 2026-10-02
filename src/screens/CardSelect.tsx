@@ -29,6 +29,43 @@ import { BonusCampaign } from "@/components/lobby/BonusCampaign";
 
 const ALL_CARDS = Array.from({ length: MAX_CARD_ID - MIN_CARD_ID + 1 }, (_, i) => i + MIN_CARD_ID);
 
+// Deterministic 5x5 fallback card generator in case PREGENERATED_CARDS entry is missing or indexed differently
+function generateFallbackCard(id: number): BingoCard {
+  const lcg = (seed: number) => {
+    let s = seed % 2147483647;
+    if (s <= 0) s += 2147483646;
+    return () => {
+      s = (s * 16807) % 2147483647;
+      return s;
+    };
+  };
+
+  const rand = lcg(id * 99991 + 7);
+
+  const getCol = (min: number, max: number, count: number) => {
+    const nums: number[] = [];
+    while (nums.length < count) {
+      const n = min + (rand() % (max - min + 1));
+      if (!nums.includes(n)) nums.push(n);
+    }
+    return nums;
+  };
+
+  const b = getCol(1, 15, 5);
+  const iCol = getCol(16, 30, 5);
+  const n = getCol(31, 45, 5);
+  n[2] = 0; // FREE space in center
+  const g = getCol(46, 60, 5);
+  const o = getCol(61, 75, 5);
+
+  const numbers: number[][] = [];
+  for (let row = 0; row < 5; row++) {
+    numbers.push([b[row], iCol[row], n[row], g[row], o[row]]);
+  }
+
+  return { id, numbers } as BingoCard;
+}
+
 export function CardSelect({ home = false }: { home?: boolean }) {
   const { t } = useTranslation();
   const nav = useNavigate();
@@ -41,10 +78,50 @@ export function CardSelect({ home = false }: { home?: boolean }) {
   const soundEnabled = useSettings((s) => s.soundEnabled);
   sound.enabled = soundEnabled;
 
-  // Instant Card Preview Modal state
+  // Preview Modal state
   const [previewId, setPreviewId] = useState<number | null>(null);
-  const previewCard: BingoCard | undefined =
-    previewId !== null ? PREGENERATED_CARDS[previewId] : undefined;
+
+  // Universal card resolver: handles Arrays, 0-indexed/1-indexed, Key-Value Maps, and fallback logic
+  const previewCard = useMemo(() => {
+    if (previewId === null) return null;
+
+    try {
+      const cardsData = PREGENERATED_CARDS as any;
+
+      if (cardsData) {
+        let raw: any = null;
+
+        if (Array.isArray(cardsData)) {
+          raw = cardsData.find(
+            (c: any) => c?.id === previewId || c?.card_id === previewId || c?.cardId === previewId
+          );
+          if (!raw && cardsData[previewId - 1]) raw = cardsData[previewId - 1];
+          if (!raw && cardsData[previewId]) raw = cardsData[previewId];
+        } else if (typeof cardsData === "object") {
+          raw = cardsData[previewId] ?? cardsData[String(previewId)] ?? cardsData.cards?.[previewId];
+        }
+
+        if (raw) {
+          const cardObj = raw.card || raw;
+          const numbers = cardObj.numbers || cardObj.grid || cardObj.matrix || cardObj.numbers_json;
+          if (Array.isArray(numbers)) {
+            return {
+              ...cardObj,
+              id: cardObj.id ?? cardObj.card_id ?? previewId,
+              numbers: numbers,
+            } as BingoCard;
+          }
+          if (cardObj && typeof cardObj === "object") {
+            return cardObj as BingoCard;
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Error loading pregenerated card:", e);
+    }
+
+    return generateFallbackCard(previewId);
+  }, [previewId]);
 
   useEffect(() => {
     refreshWallet().catch(() => {});
@@ -434,7 +511,10 @@ export function CardSelect({ home = false }: { home?: boolean }) {
             <button
               key={id}
               disabled={isTaken}
-              onClick={() => setPreviewId(id)}
+              onClick={() => {
+                haptic.selection();
+                setPreviewId(id);
+              }}
               className={[
                 "flex aspect-square items-center justify-center rounded-md text-[11px] font-bold transition-all duration-100 active:scale-90",
                 isMine
@@ -451,7 +531,7 @@ export function CardSelect({ home = false }: { home?: boolean }) {
       </div>
 
       {/* INSTANT CARD PREVIEW MODAL */}
-      {previewId !== null && previewCard && (
+      {previewId !== null && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
           onClick={() => setPreviewId(null)}
@@ -473,7 +553,13 @@ export function CardSelect({ home = false }: { home?: boolean }) {
             </div>
 
             <div className="mb-4">
-              <BingoCardView card={previewCard} daubed={new Set()} />
+              {previewCard ? (
+                <BingoCardView card={previewCard} daubed={new Set()} />
+              ) : (
+                <div className="rounded-xl border border-white/10 bg-black/40 p-4 text-center text-xs text-neon-red">
+                  Card data unavailable.
+                </div>
+              )}
             </div>
 
             <div className="flex gap-2">
