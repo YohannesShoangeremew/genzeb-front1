@@ -1,5 +1,5 @@
-import { createPortal } from "react-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -30,7 +30,7 @@ import { BonusCampaign } from "@/components/lobby/BonusCampaign";
 
 const ALL_CARDS = Array.from({ length: MAX_CARD_ID - MIN_CARD_ID + 1 }, (_, i) => i + MIN_CARD_ID);
 
-// Deterministic 5x5 fallback card generator in case PREGENERATED_CARDS entry is missing or indexed differently
+// Deterministic 5x5 fallback card generator in case PREGENERATED_CARDS entry is missing
 function generateFallbackCard(id: number): BingoCard {
   const lcg = (seed: number) => {
     let s = seed % 2147483647;
@@ -531,7 +531,9 @@ export function CardSelect({ home = false }: { home?: boolean }) {
         })}
       </div>
 
-     {/* INSTANT CARD PREVIEW MODAL (PORTAL TO BODY) */}
+      <div aria-hidden className={home ? "h-24" : "h-6"} />
+
+      {/* INSTANT CARD PREVIEW MODAL (PORTAL TO BODY) */}
       {previewId !== null &&
         createPortal(
           <div
@@ -558,7 +560,6 @@ export function CardSelect({ home = false }: { home?: boolean }) {
               <div className="mb-4">
                 {previewCard?.numbers && Array.isArray(previewCard.numbers) ? (
                   <div className="grid grid-cols-5 gap-1.5 rounded-xl border border-white/10 bg-black/40 p-2 text-center">
-                    {/* BINGO HEADER */}
                     {["B", "I", "N", "G", "O"].map((letter) => (
                       <div
                         key={letter}
@@ -567,7 +568,6 @@ export function CardSelect({ home = false }: { home?: boolean }) {
                         {letter}
                       </div>
                     ))}
-                    {/* 5x5 NUMBERS GRID */}
                     {previewCard.numbers.flatMap((row: number[], rIdx: number) =>
                       row.map((num: number, cIdx: number) => (
                         <div
@@ -615,3 +615,6 @@ export function CardSelect({ home = false }: { home?: boolean }) {
           </div>,
           document.body
         )}
+    </ScreenShell>
+  );
+}
