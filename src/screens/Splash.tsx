@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { useAuth } from "@/store/authStore";
 import type { ReactNode } from "react";
-import logo from "@/assets/logo.png"; // Adjust path to where you save the logo image
+import logo from "assets/logo.png"; // Adjust path to where you save the logo image
 
 export function Splash({ status }: { status: string }) {
   const { t } = useTranslation();
