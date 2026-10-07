@@ -41,7 +41,7 @@ export function Splash({ status }: { status: string }) {
         transition={{ type: "spring", damping: 14 }}
         className="text-center"
       >
-        <div className="animate-float text-7xl">🎱</div>
+        <div className="animate-float text-7xl">💸</div>
         <h1 className="mt-3 font-display text-4xl font-extrabold neon-text">
           {t("app.name")}
         </h1>

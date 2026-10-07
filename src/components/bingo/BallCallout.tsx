@@ -66,7 +66,7 @@ export function BallCallout({
             key="idle"
             className="flex size-20 items-center justify-center rounded-full bg-white/5 text-3xl"
           >
-            🎱
+            💸
           </motion.div>
         )}
       </AnimatePresence>
