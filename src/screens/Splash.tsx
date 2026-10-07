@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { useAuth } from "@/store/authStore";
 import type { ReactNode } from "react";
+import logo from "@/assets/logo.png"; // Adjust path to where you save the logo image
 
 export function Splash({ status }: { status: string }) {
   const { t } = useTranslation();
@@ -39,9 +40,13 @@ export function Splash({ status }: { status: string }) {
         initial={{ scale: 0.6, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: "spring", damping: 14 }}
-        className="text-center"
+        className="flex flex-col items-center text-center"
       >
-        <div className="animate-float text-7xl">💸</div>
+        <img
+          src={logo}
+          alt={t("app.name")}
+          className="h-28 w-28 object-contain animate-float drop-shadow-md"
+        />
         <h1 className="mt-3 font-display text-4xl font-extrabold neon-text">
           {t("app.name")}
         </h1>
