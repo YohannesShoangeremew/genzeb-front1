@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { useAuth } from "@/store/authStore";
 import type { ReactNode } from "react";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/logo.png"; // Adjust path to where you save the logo image
 
 export function Splash({ status }: { status: string }) {
   const { t } = useTranslation();
@@ -20,7 +20,7 @@ export function Splash({ status }: { status: string }) {
     body = (
       <div className="text-center">
         <Info title={t("auth.errorTitle")} text={t("auth.errorBody")} />
-        <Button className="mt-5 bg-white text-orange-600 hover:bg-amber-100" onClick={() => authenticate()}>
+        <Button className="mt-5" onClick={() => authenticate()}>
           {t("common.retry")}
         </Button>
       </div>
@@ -29,13 +29,13 @@ export function Splash({ status }: { status: string }) {
     body = (
       <div className="flex flex-col items-center gap-3">
         <Spinner size={32} />
-        <p className="text-orange-100 font-medium">{t("auth.connecting")}</p>
+        <p className="text-ink-muted">{t("auth.connecting")}</p>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-10 px-8 bg-gradient-to-b from-orange-500 to-orange-700 text-white">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-10 px-8">
       <motion.div
         initial={{ scale: 0.6, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -45,12 +45,12 @@ export function Splash({ status }: { status: string }) {
         <img
           src={logo}
           alt={t("app.name")}
-          className="h-28 w-28 object-contain animate-float drop-shadow-xl"
+          className="h-28 w-28 object-contain animate-float drop-shadow-md"
         />
-        <h1 className="mt-3 font-display text-4xl font-extrabold text-white drop-shadow-md">
+        <h1 className="mt-3 font-display text-4xl font-extrabold neon-text">
           {t("app.name")}
         </h1>
-        <p className="mt-1 text-amber-200 font-semibold">{t("app.tagline")}</p>
+        <p className="mt-1 text-neon-cyan">{t("app.tagline")}</p>
       </motion.div>
       {body}
     </div>
@@ -60,8 +60,8 @@ export function Splash({ status }: { status: string }) {
 function Info({ title, text }: { title: string; text: string }) {
   return (
     <div className="max-w-xs text-center">
-      <h2 className="font-display text-xl font-bold text-white">{title}</h2>
-      <p className="mt-2 text-sm text-orange-100">{text}</p>
+      <h2 className="font-display text-xl font-bold">{title}</h2>
+      <p className="mt-2 text-sm text-ink-muted">{text}</p>
     </div>
   );
 }
