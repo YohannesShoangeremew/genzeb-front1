@@ -11,6 +11,3 @@ tsconfig.tsbuildinfo
 
 # Local master voice recordings (already shipped, renamed, under public/audio/am/)
 /voice/
-
-.vercel
-.env*

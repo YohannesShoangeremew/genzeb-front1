@@ -28,12 +28,12 @@ export function BingoCardView({ card, daubed, drawn, showCalled = false, winLine
   const flat = card.numbers.flat();
 
   return (
-    <div className={size === "lg" ? "mx-auto w-16 max-w-[3.5rem]" : "w-20"}>
+    <div className={size === "lg" ? "mx-auto w-full max-w-[9.5rem]" : "w-44"}>
       <div className="mb-0.5 grid grid-cols-5 gap-0.5">
         {LETTERS.map((l, i) => (
           <div
             key={l}
-            className="rounded bg-bg-elevated py-0.5 text-center font-display text-[7px] font-extrabold leading-none text-white"
+            className="rounded-md bg-bg-elevated py-0.5 text-center font-display text-[10px] font-extrabold leading-none text-white"
             style={{ opacity: 0.9 + i * 0.02 }}
           >
             {l}
@@ -59,8 +59,8 @@ export function BingoCardView({ card, daubed, drawn, showCalled = false, winLine
               animate={inWin ? { scale: [1, 1.12, 1] } : {}}
               transition={inWin ? { repeat: Infinity, duration: 1 } : {}}
               className={[
-                "relative flex aspect-square items-center justify-center rounded-[2px] font-display font-bold",
-                size === "lg" ? "text-[7px]" : "text-[9px]",
+                "relative flex aspect-square items-center justify-center rounded-md font-display font-bold",
+                size === "lg" ? "text-[11px]" : "text-xs",
                 isCenter
                   ? "bg-grad-gold text-bg"
                   : inWin
@@ -72,7 +72,7 @@ export function BingoCardView({ card, daubed, drawn, showCalled = false, winLine
                         : "bg-white/5 text-ink-muted",
               ].join(" ")}
             >
-              {isCenter ? "★" : num}
+              {isCenter ? (size === "lg" ? "★" : "★") : num}
             </motion.button>
           );
         })}
