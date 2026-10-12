@@ -15,7 +15,7 @@ export const BET_BY_TYPE: Record<GameType, number> = Object.fromEntries(
 ) as Record<GameType, number>;
 
 export const MIN_PLAYERS = 2;
-export const MAX_CARDS_PER_PLAYER = 4; // mirror of domain.MaxCardsPerPlayer
+export const MAX_CARDS_PER_PLAYER = 8; // mirror of domain.MaxCardsPerPlayer
 export const HOUSE_CUT = 0.2; // 20% — prize = bet * players * 0.8
 export const COUNTDOWN_SECONDS = 40; // mirror of domain.CountdownDuration
 export const MIN_CARD_ID = 1;
@@ -31,19 +31,19 @@ export const PAYMENT_ACCOUNTS: Record<
   { number: string; name: string }
 > = {
   Telebirr: {
-    number: import.meta.env.VITE_TELEBIRR_NUMBER ?? "0999357708",
-    name: import.meta.env.VITE_PAYMENT_NAME ?? "Abebe",
+    number: import.meta.env.VITE_TELEBIRR_NUMBER ?? "0966114511",
+    name: import.meta.env.VITE_PAYMENT_NAME ?? "Tigist",
   },
   // Keep these numbers in sync with the backend's VERIFY_CBEBIRR_ACCOUNT /
   // VERIFY_MPESA_ACCOUNT (render.yaml) — the verifier only auto-approves
   // receipts credited to those exact accounts.
   CBEBirr: {
-    number: import.meta.env.VITE_CBEBIRR_NUMBER ?? "0990878233",
-    name: import.meta.env.VITE_CBEBIRR_NAME ?? "Danasa beyene mana",
+    number: import.meta.env.VITE_CBEBIRR_NUMBER ?? "0912978030",
+    name: import.meta.env.VITE_CBEBIRR_NAME ?? "Yohannes Shoangeremew",
   },
   Mpesa: {
-    number: import.meta.env.VITE_MPESA_NUMBER ?? "0710132230",
-    name: import.meta.env.VITE_MPESA_NAME ?? import.meta.env.VITE_PAYMENT_NAME ?? "Abebe",
+    number: import.meta.env.VITE_MPESA_NUMBER ?? "0713188040",
+    name: import.meta.env.VITE_MPESA_NAME ?? import.meta.env.VITE_PAYMENT_NAME ?? "Yohannes",
   },
 };
 
