@@ -6,8 +6,8 @@ export type Stake = { type: GameType; bet: number; vip: boolean };
 // Two tiers only: a standard 10-birr game and a premium 50-birr VIP game.
 // Mirrors the backend GameType enum (REGULAR / VIP).
 export const STAKES: Stake[] = [
-  { type: "REGULAR", bet: 10, vip: false },
-  { type: "VIP", bet: 50, vip: true },
+  { type: "REGULAR", bet: 50, vip: false },
+  { type: "VIP", bet: 200, vip: true },
 ];
 
 export const BET_BY_TYPE: Record<GameType, number> = Object.fromEntries(
