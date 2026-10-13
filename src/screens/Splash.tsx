@@ -45,9 +45,9 @@ export function Splash({ status }: { status: string }) {
         <img
           src={logo}
           alt={t("app.name")}
-          className="h-36 w-36 object-contain animate-float drop-shadow-[0_0_35px_rgba(0,240,255,0.7)]"
+          className="h-48 w-48 object-contain animate-float drop-shadow-[0_0_50px_rgba(0,240,255,0.8)]"
         />
-        <h1 className="mt-4 font-display text-4xl font-extrabold neon-text">
+        <h1 className="mt-5 font-display text-4xl font-extrabold neon-text">
           {t("app.name")}
         </h1>
         <p className="mt-1 text-neon-cyan">{t("app.tagline")}</p>
