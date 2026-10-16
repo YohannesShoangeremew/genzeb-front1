@@ -17,7 +17,7 @@ export const BET_BY_TYPE: Record<GameType, number> = Object.fromEntries(
 export const MIN_PLAYERS = 2;
 export const MAX_CARDS_PER_PLAYER = 10; // mirror of domain.MaxCardsPerPlayer
 export const HOUSE_CUT = 0.2; // 20% — prize = bet * players * 0.8
-export const COUNTDOWN_SECONDS = 40; // mirror of domain.CountdownDuration
+export const COUNTDOWN_SECONDS = 60; // mirror of domain.CountdownDuration
 export const MIN_CARD_ID = 1;
 export const MAX_CARD_ID = 500;
 export const GRID = 5;
